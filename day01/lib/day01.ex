@@ -45,8 +45,7 @@ defmodule Day01 do
     if result == :no_pairs_found do
       find_triplet(tail, set, target)
     else
-      {a, b} = result
-      {a, b, head}
+      Tuple.append(result, head)
     end
   end
 end
