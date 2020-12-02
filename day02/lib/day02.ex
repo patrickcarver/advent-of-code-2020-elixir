@@ -1,91 +1,59 @@
 defmodule Day02 do
 
+  def part1() do
+    run(input(), &validate_part1/1)
+  end
+
+  def part2() do
+    run(input(), &validate_part2/1)
+  end
+
+  def run(stream, validate_fun) do
+    stream
+    |> parse()
+    |> validate_fun.()
+    |> count()
+  end
+
   def input() do
     "priv/input.txt"
-    |> File.read!()
-    |> String.split("\n", trim: true)
+    |> File.stream!()
+    |> Stream.map(&String.trim_trailing/1)
   end
 
-  def trim_letter(value) do
-     String.trim_trailing(value, ":")
-  end
+  def parse(stream) do
+    Stream.map(stream, fn line ->
+      [nums, letter, password] = String.split(line, " ")
 
-  def total_valid_passwords(lines, parse, validate) do
-    lines
-    |> Enum.reduce(0, fn line, acc ->
-      line
-      |> parse.()
-      |> validate.()
-      |> increase_if_valid(acc)
+      nums = nums |> String.split("-") |> Enum.map(&String.to_integer/1)
+      letter = String.trim_trailing(letter, ":")
+
+      {nums, letter, password}
     end)
   end
 
-  def increase_if_valid(true, acc), do: acc + 1
-  def increase_if_valid(false, acc), do: acc
+  def validate_part1(stream) do
+    Stream.map(stream, fn {[min, max], letter, password} ->
+      letter_totals = password |> String.graphemes() |> Enum.frequencies()
+      total = Map.get(letter_totals, letter)
 
-  defmodule Part1 do
-    alias Day02
-
-    def run do
-      Day02.total_valid_passwords(Day02.input(), &parse_line/1, &is_valid_password/1)
-    end
-
-    def is_valid_password({letter, amount_range, letter_count}) do
-      letter_amount = Map.get(letter_count, letter)
-
-      letter_amount in amount_range
-    end
-
-    def parse_line(line) do
-      [amount, letter, password] = String.split(line, " ")
-
-      letter = Day02.trim_letter(letter)
-      amount_range = amount_range(amount)
-      letter_count = count_letters(password)
-
-      {letter, amount_range, letter_count}
-    end
-
-    def amount_range(amount) do
-      amount
-      |> String.split("-")
-      |> Enum.map(&String.to_integer/1)
-      |> (fn [min, max] -> min..max end).()
-    end
-
-    def count_letters(password) do
-      password
-      |> String.graphemes()
-      |> Enum.frequencies()
-    end
+      total in min..max
+    end)
   end
 
-  defmodule Part2 do
-    alias Day02
+  def validate_part2(stream) do
+    Stream.map(stream, fn {positions, letter, password} ->
+      [is_first_in_position, is_second_in_position] = are_letters_in_position(positions, letter, password)
 
-    def run do
-      Day02.total_valid_passwords(Day02.input(), &parse_line/1, &is_valid_password/1)
-    end
+      is_first_in_position != is_second_in_position
+    end)
+  end
 
-    def is_valid_password({letter, [first, second], password}) do
-      first_letter = String.at(password, first)
-      second_letter = String.at(password, second)
+  def are_letters_in_position(positions, letter, password) do
+    Enum.map(positions, fn position -> String.at(password, position - 1) == letter end)
+  end
 
-      :erlang.xor(first_letter == letter, second_letter == letter)
-    end
-
-    def parse_line(line) do
-      [positions, letter, password] = String.split(line, " ")
-
-      letter = Day02.trim_letter(letter)
-
-      {letter, positions(positions), password}
-    end
-
-    def positions(positions) do
-      positions
-      |> String.split("-")
-      |> Enum.map(& &1 |> String.to_integer() |> Kernel.-(1) )
-    end
+  def count(stream) do
+    Enum.count(stream, & &1 == true)
   end
 end
