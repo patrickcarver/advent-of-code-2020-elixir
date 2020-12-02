@@ -21,11 +21,11 @@ defmodule Day01 do
   end
 
   def find_pair(entries, target) do
-    hd(for x <- entries, y <- entries, x + y == target, do: [x, y])
+    hd(for x <- entries, y <- entries -- [x], x + y == target, do: [x, y])
   end
 
   def find_triple(entries, target) do
-    hd(for x <- entries, y <- entries, z <- entries, x + y + z == target, do: [x, y, z])
+    hd(for x <- entries, y <- entries -- [x], z <- entries -- [x, y], x + y + z == target, do: [x, y, z])
   end
 
   def multiply(entries) do
