@@ -42,15 +42,16 @@ defmodule Day02 do
   end
 
   def validate_part2(stream) do
-    Stream.map(stream, fn {positions, letter, password} ->
-      [is_first_in_position, is_second_in_position] = are_letters_in_position(positions, letter, password)
+    Stream.map(stream, fn {[first, second], letter, password} ->
+      is_first_in_position = is_letter_in_position(password, letter, first)
+      is_second_in_position = is_letter_in_position(password, letter, second)
 
       is_first_in_position != is_second_in_position
     end)
   end
 
-  def are_letters_in_position(positions, letter, password) do
-    Enum.map(positions, fn position -> String.at(password, position - 1) == letter end)
+  def is_letter_in_position(password, letter, position) do
+    String.at(password, position - 1) == letter
   end
 
   def count(stream) do
