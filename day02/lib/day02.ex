@@ -34,10 +34,11 @@ defmodule Day02 do
 
   def validate_part1(stream) do
     Stream.map(stream, fn {[min, max], letter, password} ->
-      letter_totals = password |> String.graphemes() |> Enum.frequencies()
-      total = Map.get(letter_totals, letter)
-
-      total in min..max
+      password
+      |> String.graphemes()
+      |> Enum.frequencies()
+      |> Map.get(letter)
+      |> Kernel.in(min..max)
     end)
   end
 
