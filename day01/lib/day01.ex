@@ -1,51 +1,34 @@
 defmodule Day01 do
   def part1 do
-    ints = ints("priv/input.txt")
-    set = MapSet.new(ints)
-    {a, b} = find_pair(ints, set, 2020)
-    a * b
+    "priv/input.txt"
+    |> entries()
+    |> find_pair(2020)
+    |> multiply()
   end
 
   def part2 do
-    ints = ints("priv/input.txt")
-    set = MapSet.new(ints)
-    {a, b, c} = find_triplet(ints, set, 2020)
-    a * b * c
+    "priv/input.txt"
+    |> entries()
+    |> find_triple(2020)
+    |> multiply()
   end
 
-  def ints(file_name) do
+  def entries(file_name) do
     file_name
-    |> File.stream!()
-    |> Enum.map(fn line ->
-      line
-      |> String.trim_trailing()
-      |> String.to_integer()
-    end)
+    |> File.read!()
+    |> String.split("\n", trim: true)
+    |> Enum.map(&String.to_integer/1)
   end
 
-  def find_pair([], _set, _target) do
-    :no_pairs_found
+  def find_pair(entries, target) do
+    hd(for x <- entries, y <- entries, x + y == target, do: [x, y])
   end
 
-  def find_pair([head | tail], set, target) do
-    diff = target - head
-
-    if MapSet.member?(set, diff) do
-      {head, diff}
-    else
-      find_pair(tail, set, target)
-    end
+  def find_triple(entries, target) do
+    hd(for x <- entries, y <- entries, z <- entries, x + y + z == target, do: [x, y, z])
   end
 
-  def find_triplet([head | tail], set, target) do
-    diff = target - head
-
-    result = find_pair(tail, set, diff)
-
-    if result == :no_pairs_found do
-      find_triplet(tail, set, target)
-    else
-      Tuple.append(result, head)
-    end
+  def multiply(entries) do
+    Enum.reduce(entries, fn entry, acc -> entry * acc end)
   end
 end
