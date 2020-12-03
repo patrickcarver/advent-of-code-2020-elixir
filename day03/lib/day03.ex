@@ -1,73 +1,76 @@
 defmodule Day03 do
-  def grid(file_name) do
-    file_name
-    |> File.stream!()
-    |> Enum.map(fn line ->
-      line
-      |> String.trim_trailing()
-      |> String.graphemes()
+  def part1 do
+    grid_info = grid_info("priv/input.txt")
+    slope = {3, 1}
+    route = route(grid_info.width, grid_info.height, slope)
+    count_trees(route, grid_info.grid)
+  end
+
+  def part2 do
+    grid_info = grid_info("priv/input.txt")
+    slopes = [{1, 1}, {3, 1}, {5, 1}, {7, 1}, {1, 2}]
+
+    multiply_trees(grid_info, slopes)
+  end
+
+  def multiply_trees(grid_info, slopes) do
+    Enum.reduce(slopes, 1, fn slope, total_trees ->
+      route = route(grid_info.width, grid_info.height, slope)
+      trees = count_trees(route, grid_info.grid)
+      total_trees * trees
     end)
   end
 
-  def dimensions(grid) do
-    width = grid |> hd() |> length()
-    height = grid |> length()
-
-    {width, height}
-  end
-
-  def add_coords(grid) do
-    grid
-    |> Enum.with_index(1)
-    |> Enum.reduce(%{}, fn {row, y}, acc ->
-      row
-      |> Enum.with_index(1)
-      |> Enum.map(fn {square, x} -> {{x, y}, square} end)
-      |> Map.new()
-      |> Map.merge(acc)
+  def count_trees(route, grid) do
+    Enum.reduce(route, 0, fn coordinate, trees ->
+      if MapSet.member?(grid, coordinate) do trees + 1 else trees end
     end)
   end
 
-  def grid_info(file_name) do
-    grid = grid(file_name)
-    {width, height} = dimensions(grid)
-    grid = add_coords(grid)
+  def route(width, height, {right, down}) do
+    start = {1, 1}
+
+    Stream.unfold(start, fn
+      {_x, y} when y > height ->
+        nil
+      {x, y} = current ->
+        new_x = move_x(x, right, width)
+        new_y = move_y(y, down)
+
+        {current, {new_x, new_y}}
+    end)
+  end
+
+  def move_x(x, right, width) do
+    x = x + right
+    if x > width do rem(x, width) else x end
+  end
+
+  def move_y(y, down) do
+    y + down
+  end
+
+  def grid_info(input) do
+    lines = load_lines(input)
+
+    grid = parse_grid(lines)
+    height = length(lines)
+    width = lines |> hd() |> String.length()
 
     %{grid: grid, width: width, height: height}
   end
 
-  def part1 do
-    "priv/input.txt"
-    |> grid_info()
-    |> Map.merge(%{x: 1, y: 1, right: 3, down: 1, trees: 0})
-    |> count_trees()
+  def load_lines(file_name) do
+    file_name
+    |> File.stream!()
+    |> Enum.map(&String.trim_trailing/1)
   end
 
-  def part2 do
-    init_data = "priv/input.txt" |> grid_info() |> Map.merge(%{x: 1, y: 1, trees: 0})
-
-    [{1,1}, {3, 1}, {5, 1}, {7, 1}, {1, 2}]
-    |> Enum.reduce(1, fn {right, down}, acc ->
-      trees =
-        init_data
-        |> Map.merge(%{right: right, down: down})
-        |> count_trees()
-
-      acc * trees
-    end)
-
-  end
-
-  def count_trees(%{trees: trees, height: height, y: y}) when y > height do
-    trees
-  end
-
-  def count_trees(%{grid: grid, width: width, x: x, y: y, right: right, down: down, trees: trees} = data) do
-    x = if x > width, do: x - width, else: x
-    square = Map.get(grid, {x, y})
-    trees = if square == "#", do: trees + 1, else: trees
-    data = %{data | x: x + right, y: y + down, trees: trees}
-
-    count_trees(data)
+  def parse_grid(lines) do
+    for {line, y} <- Enum.with_index(lines, 1),
+        {char, x} <- Enum.with_index(String.graphemes(line), 1),
+        char == "#",
+        do: {x, y},
+        into: MapSet.new()
   end
 end
