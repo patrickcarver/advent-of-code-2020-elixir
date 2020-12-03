@@ -3,6 +3,7 @@ defmodule Day03 do
     grid_info = grid_info("priv/input.txt")
     slope = {3, 1}
     route = route(grid_info.width, grid_info.height, slope)
+
     count_trees(route, grid_info.grid)
   end
 
@@ -17,6 +18,7 @@ defmodule Day03 do
     Enum.reduce(slopes, 1, fn slope, total_trees ->
       route = route(grid_info.width, grid_info.height, slope)
       trees = count_trees(route, grid_info.grid)
+
       total_trees * trees
     end)
   end
