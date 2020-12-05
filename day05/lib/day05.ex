@@ -45,39 +45,19 @@ defmodule Day05 do
   end
 
   def seat_id(boarding_pass) do
-    {row, column} = rows_and_columns(boarding_pass)
-
-    row_number = convert(row, {0, 127})
-    column_number = convert(column, {0, 7})
-
-    row_number * 8 + column_number
-  end
-
-  def rows_and_columns(boarding_pass) do
     boarding_pass
-    |> String.graphemes()
-    |> Enum.split(7)
+    |> to_binary()
+    |> String.split_at(7)
+    |> Tuple.to_list()
+    |> Enum.map(& &1 |> Integer.parse(2) |> elem(0))
+    |> (fn [row, col] -> row * 8 + col end).()
   end
 
-  def convert(letters, range) do
-    Enum.reduce(letters, range, &do_convert/2)
-  end
-
-  def do_convert(value, {min, max}) when max - min == 1 and value in ~w[F L] do
-    min
-  end
-
-  def do_convert(value, {min, max}) when value in ~w[F L] do
-    top = div((max + min), 2)
-    {min, top}
-  end
-
-  def do_convert(value, {min, max}) when max - min == 1 and value in ~w[B R] do
-    max
-  end
-
-  def do_convert(value, {min, max}) when value in ~w[B R] do
-    bottom = div((max + min), 2) + 1
-    {bottom, max}
+  def to_binary(boarding_pass) do
+    boarding_pass
+    |> String.replace("F", "0")
+    |> String.replace("B", "1")
+    |> String.replace("L", "0")
+    |> String.replace("R", "1")
   end
 end
