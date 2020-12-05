@@ -26,7 +26,8 @@ defmodule Day05 do
   def all_seats(taken_seats) do
     taken_seats
     |> Enum.min_max()
-    |> (fn {min, max}-> Enum.to_list(min..max) end).()
+    |> (fn {min, max}-> min..max end).()
+    |> Enum.to_list()
   end
 
   def seats(stream) do
