@@ -13,8 +13,16 @@ defmodule Day05 do
 
   def taken_seats(file_name) do
     file_name
-    |> stream()
-    |> seats()
+    |> File.stream!()
+    |> Stream.map(&String.trim_trailing/1)
+    |> Enum.map(&seat_id/1)
+  end
+
+  def seat_id(boarding_pass) do
+    boarding_pass
+    |> String.replace(["F", "L"], "0")
+    |> String.replace(["B", "R"], "1")
+    |> String.to_integer(2)
   end
 
   def my_seat(taken_seats) do
@@ -30,32 +38,7 @@ defmodule Day05 do
     |> Enum.to_list()
   end
 
-  def seats(stream) do
-    Enum.map(stream, &seat_id/1)
-  end
-
   def highest_seat_id(seats) do
     Enum.max(seats)
-  end
-
-  def stream(file_name) do
-    file_name
-    |> File.stream!()
-    |> Stream.map(&String.trim_trailing/1)
-  end
-
-  def seat_id(boarding_pass) do
-    boarding_pass
-    |> to_binary()
-    |> Integer.parse(2)
-    |> elem(0)
-  end
-
-  def to_binary(boarding_pass) do
-    boarding_pass
-    |> String.replace("F", "0")
-    |> String.replace("B", "1")
-    |> String.replace("L", "0")
-    |> String.replace("R", "1")
   end
 end
