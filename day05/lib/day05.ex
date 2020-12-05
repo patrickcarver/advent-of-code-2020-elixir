@@ -47,10 +47,8 @@ defmodule Day05 do
   def seat_id(boarding_pass) do
     boarding_pass
     |> to_binary()
-    |> String.split_at(7)
-    |> Tuple.to_list()
-    |> Enum.map(& &1 |> Integer.parse(2) |> elem(0))
-    |> (fn [row, col] -> row * 8 + col end).()
+    |> Integer.parse(2)
+    |> elem(0)
   end
 
   def to_binary(boarding_pass) do
