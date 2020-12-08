@@ -18,8 +18,7 @@ defmodule Day08 do
     |> File.stream!()
     |> Stream.map(&String.trim_trailing/1)
     |> Stream.map(fn <<operation::binary-size(3), _::binary-size(1), argument::binary>> ->
-      argument = String.to_integer(argument)
-      %{operation: operation, argument: argument}
+      {operation, String.to_integer(argument)}
     end)
     |> Stream.with_index()
     |> Stream.map(fn {instruction, index} -> {index, instruction} end)
@@ -31,16 +30,13 @@ defmodule Day08 do
   end
 
   def accumulator_after_last_instruction(%{instructions: instructions} = state) do
-    indexes = non_acc_instruction_indexes(instructions)
-
-    loop_until_halt(indexes, state)
+    instructions
+    |> non_acc_instruction_indexes()
+    |> loop_until_halt(state)
   end
 
   def loop_until_halt([index | rest], state) do
-    new_instructions = state.instructions |> Map.update!(index, &swap_operation/1)
-    new_state = %{state | instructions: new_instructions}
-
-    {result, acc} = loop(new_state)
+    {result, acc} = see_if_loop_halts(state, index)
 
     case result do
       :loop -> loop_until_halt(rest, state)
@@ -48,12 +44,23 @@ defmodule Day08 do
     end
   end
 
-  def swap_operation(%{operation: "jmp"} = instruction), do: %{instruction | operation: "nop"}
-  def swap_operation(%{operation: "nop"} = instruction), do: %{instruction | operation: "jmp"}
+  def see_if_loop_halts(state, index) do
+    state
+    |> swap_operation_on_index(index)
+    |> loop()
+  end
+
+  def swap_operation_on_index(state, index) do
+    new_instructions = Map.update!(state.instructions, index, &swap_operation/1)
+    %{state | instructions: new_instructions}
+  end
+
+  def swap_operation({"jmp", argument}), do: {"nop", argument}
+  def swap_operation({"nop", argument}), do: {"jmp", argument}
 
   def non_acc_instruction_indexes(instructions) do
     instructions
-    |> Enum.filter(fn {_index, %{operation: operation}} -> operation != "acc" end)
+    |> Enum.filter(fn {_index, {operation, _argument}} -> operation != "acc" end)
     |> Enum.map(fn {index, _} -> index end)
   end
 
@@ -63,14 +70,14 @@ defmodule Day08 do
     |> elem(1)
   end
 
-  def loop(%{instructions: instructions, acc: acc, current_index: current_index, visited: visited} = state) do
-    if MapSet.member?(visited, current_index) do
-      {:loop, acc}
+  def loop(state) do
+    if index_has_been_visited(state) do
+      {:loop, state.acc}
     else
-      instruction = Map.get(instructions, current_index, :not_found)
+      instruction = current_instruction(state)
 
       if instruction == :not_found do
-        {:halt, acc}
+        {:halt, state.acc}
       else
         instruction
         |> run_operation(state)
@@ -79,24 +86,37 @@ defmodule Day08 do
     end
   end
 
-  def run_operation(%{operation: "acc", argument: argument}, state) do
+  def index_has_been_visited(state) do
+    MapSet.member?(state.visited, state.current_index)
+  end
+
+  def current_instruction(state) do
+    Map.get(state.instructions, state.current_index, :not_found)
+  end
+
+  def add_current_index_to_visited(state) do
+    MapSet.put(state.visited, state.current_index)
+  end
+
+  def run_operation({"acc", argument}, state) do
     %{state |
       acc: state.acc + argument,
       current_index: state.current_index + 1,
-      visited: MapSet.put(state.visited, state.current_index),
+      visited: add_current_index_to_visited(state)
     }
   end
 
-  def run_operation(%{operation: "jmp", argument: argument}, state) do
+  def run_operation({"jmp", argument}, state) do
     %{state |
       current_index: state.current_index + argument,
-      visited: MapSet.put(state.visited, state.current_index),
+      visited: add_current_index_to_visited(state)
     }
   end
 
-  def run_operation(%{operation: "nop"}, state) do
+  def run_operation({"nop", _argument}, state) do
     %{state |
       current_index: state.current_index + 1,
+      visited: add_current_index_to_visited(state)
     }
   end
 end
