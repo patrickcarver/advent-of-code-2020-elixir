@@ -24,17 +24,17 @@ defmodule Day09 do
     end
   end
 
-  def find_set_sum(numbers, invalid, current_sum \\ 0, set \\ [])
+  def find_set_sum(numbers, invalid) do
+    Enum.reduce_while(numbers, {0, []}, fn number, {sum, set} ->
+      new_sum = sum + number
+      new_set = [number | set]
 
-  def find_set_sum([head | tail], invalid, current_sum, set) do
-    new_sum = current_sum + head
-    new_set = [head | set]
-
-    cond do
-      new_sum > invalid -> :too_big
-      new_sum < invalid -> find_set_sum(tail, invalid, new_sum, new_set)
-      true -> new_set
-    end
+      cond do
+        new_sum > invalid -> {:halt, :too_big}
+        new_sum < invalid -> {:cont, {new_sum, new_set}}
+        true ->              {:halt, new_set}
+      end
+    end)
   end
 
   def first_number_not_sum_of_two_of_previous(numbers, preamble_amount) when length(numbers) == preamble_amount do
@@ -46,12 +46,12 @@ defmodule Day09 do
     sums = sums(preamble)
 
     if MapSet.member?(sums, number) do
-        numbers
-        |> tl()
-        |> first_number_not_sum_of_two_of_previous(preamble_amount)
-      else
-        number
-      end
+      numbers
+      |> tl()
+      |> first_number_not_sum_of_two_of_previous(preamble_amount)
+    else
+      number
+    end
   end
 
   def parse(file_name) do
