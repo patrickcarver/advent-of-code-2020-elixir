@@ -64,8 +64,7 @@ defmodule Day09 do
 
   # brute force this thang cuz it's too early in the morning to think smarter
   def sums(numbers) do
-    (for x <- numbers, y <- numbers, x != y, do: [x,y])
-    |> Enum.map(&Enum.sum/1)
+    (for x <- numbers, y <- numbers, x != y, do: x + y)
     |> MapSet.new()
   end
 end
