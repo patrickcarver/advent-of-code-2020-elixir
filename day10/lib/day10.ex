@@ -2,16 +2,27 @@ defmodule Day10 do
   alias Graph
 
   def part1 do
-    outlet = 0
-    adapters = parse("priv/input.txt")
-    device = adapters |> Enum.max() |> Kernel.+(3)
-    joltages = [outlet, device | adapters] |> Enum.sort(:desc)
-    graph = Graph.new()
-
-    build_graph(graph, joltages)
+    "priv/input.txt"
+    |> init()
+    |> build_graph()
     |> find_path()
     |> count_diffs_of_ones_and_threes()
     |> product_of_diffs_of_ones_and_threes()
+  end
+
+  def init(file_name) do
+    joltages = joltages(file_name)
+    graph = Graph.new()
+
+    {graph, joltages}
+  end
+
+  def joltages(file_name) do
+    outlet = 0
+    adapters = parse(file_name)
+    device = adapters |> Enum.max() |> Kernel.+(3)
+
+    [outlet, device | adapters] |> Enum.sort(:desc)
   end
 
   def find_path(graph) do
@@ -37,22 +48,22 @@ defmodule Day10 do
     |> Map.delete(:prev)
   end
 
-  def build_graph(graph, []) do
+  def build_graph({graph, []}) do
     graph
   end
 
-  def build_graph(graph, [joltage | rest]) do
-    children = rest |> Enum.take(3) |> Enum.filter(fn j -> j >= (joltage - 3) end)
+  def build_graph({graph, [joltage | rest]}) do
+    graph =
+      rest
+      |> Enum.take(3)
+      |> Enum.filter(fn j -> j >= (joltage - 3) end)
+      |> Enum.reduce(graph, fn child, acc ->
+        acc
+        |> Graph.add_vertex(child)
+        |> Graph.add_edge(Graph.Edge.new(joltage, child, weight: joltage - child))
+      end)
 
-    graph = Enum.reduce(children, graph, fn child, acc ->
-      weight = joltage - child
-
-      acc
-      |> Graph.add_vertex(child)
-      |> Graph.add_edge(Graph.Edge.new(joltage, child, weight: weight))
-    end)
-
-    build_graph(graph, rest)
+    build_graph({graph, rest})
   end
 
   def parse(file_name) do
