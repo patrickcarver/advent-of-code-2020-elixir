@@ -10,6 +10,49 @@ defmodule Day10 do
     |> product_of_diffs_of_ones_and_threes()
   end
 
+  # hat tip for part 2: https://github.com/sevenseacat/advent_of_code_2020/blob/master/lib/day10.ex
+
+  def part2 do
+    "priv/input.txt"
+    |> joltages(:asc)
+    |> differences()
+    |> chunk_by_differences()
+    |> reject_insufficient_chunks
+    |> calculate_chunk_lengths()
+    |> permutation_counts()
+    |> product_of_permutation_counts()
+  end
+
+  def product_of_permutation_counts(counts) do
+    Enum.reduce(counts, 1, fn count, acc -> acc * count end)
+  end
+
+  def permutation_counts(lengths) do
+    Enum.map(lengths, fn
+      2 -> 2 # 2 sequential numbers can have 2 different permutations
+      3 -> 4 # 3 sequential numbers can have 4 different permutations
+      4 -> 7 # 4 sequential numbers can have 7 different permutations
+    end)
+  end
+
+  def calculate_chunk_lengths(chunks) do
+    Enum.map(chunks, &length/1)
+  end
+
+  def reject_insufficient_chunks(chunks) do
+    Enum.reject(chunks, fn chunk -> chunk == [1] || Enum.all?(chunk, & &1 == 3) end)
+  end
+
+  def chunk_by_differences(differences) do
+    Enum.chunk_by(differences, fn difference -> difference == 1 end) # could be difference== 3
+  end
+
+  def differences([_elem]), do: []
+
+  def differences([first, second | rest]) do
+    [second - first | differences([second | rest])]
+  end
+
   def init(file_name) do
     joltages = joltages(file_name)
     graph = Graph.new()
@@ -17,12 +60,12 @@ defmodule Day10 do
     {graph, joltages}
   end
 
-  def joltages(file_name) do
+  def joltages(file_name, sort_order \\ :desc) do
     outlet = 0
     adapters = parse(file_name)
     device = adapters |> Enum.max() |> Kernel.+(3)
 
-    [outlet, device | adapters] |> Enum.sort(:desc)
+    [outlet, device | adapters] |> Enum.sort(sort_order)
   end
 
   def find_path(graph) do
@@ -60,7 +103,7 @@ defmodule Day10 do
       |> Enum.reduce(graph, fn child, acc ->
         acc
         |> Graph.add_vertex(child)
-        |> Graph.add_edge(Graph.Edge.new(joltage, child, weight: joltage - child))
+        |> Graph.add_edge(Graph.Edge.new(joltage, child))
       end)
 
     build_graph({graph, rest})
