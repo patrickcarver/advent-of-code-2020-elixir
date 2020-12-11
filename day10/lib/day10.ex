@@ -10,6 +10,15 @@ defmodule Day10 do
     |> product_of_diffs_of_ones_and_threes()
   end
 
+  def part1_alternate() do
+    "priv/input.txt"
+    |> joltages(:asc)
+    |> Enum.chunk_every(2, 1, :discard)
+    |> Enum.map(fn [first, second] -> second - first end)
+    |> Enum.frequencies()
+    |> (fn %{1 => ones, 3 => threes} -> ones * threes end).()
+  end
+
   # hat tip for part 2: https://github.com/sevenseacat/advent_of_code_2020/blob/master/lib/day10.ex
 
   def part2 do
