@@ -68,8 +68,8 @@ defmodule Day11 do
     if occupied_limit_or_above?(seats, limit) do :empty else :occupied end
   end
 
-  def occupied_limit_or_above?(seats, number) do
-    Enum.count(seats, fn seat -> seat == :occupied end) >= number
+  def occupied_limit_or_above?(seats, limit) do
+    Enum.count(seats, fn seat -> seat == :occupied end) >= limit
   end
 
   def none_occupied?(seats) do
