@@ -8,34 +8,27 @@ defmodule Day12 do
     |> distance()
   end
 
-  def distance(%{x: x, y: y}) do
-    manhattan_distance({x, y}, {0, 0})
+  def distance(%{x: x, y: y}), do: manhattan_distance({x, y}, {0, 0})
+
+  def manhattan_distance({target_x, target_y}, {origin_x, origin_y}) do
+    abs(target_x - origin_x) + abs(target_y - origin_y)
   end
 
-  def navigation(actions) do
-    Enum.reduce(actions, new_ferry(), &act/2)
-  end
+  def navigation(actions), do: Enum.reduce(actions, new_ferry(), &act/2)
 
-  def new_ferry() do
-    %{x: 0, y: 0, orientation: :east}
-  end
+  def new_ferry(), do: %{x: 0, y: 0, orientation: :east}
 
   def act({:north, value}, %{y: y} = ferry), do: %{ferry | y: y + value}
   def act({:south, value}, %{y: y} = ferry), do: %{ferry | y: y - value}
   def act({:east, value},  %{x: x} = ferry), do: %{ferry | x: x + value}
   def act({:west, value},  %{x: x} = ferry), do: %{ferry | x: x - value}
 
+  def act({:forward, value}, %{orientation: orientation} = ferry), do: act({orientation, value}, ferry)
+
+  def act({:left, value}, ferry), do: act({:right, 360 - value}, ferry)
   def act({:right, value}, %{orientation: ferry_orientation} = ferry) do
     new_orientation = new_orientation(ferry_orientation, value)
     %{ferry | orientation: new_orientation}
-  end
-
-  def act({:left, 90}, ferry), do: act({:right, 270}, ferry)
-  def act({:left, 270}, ferry), do: act({:right, 90}, ferry)
-  def act({:left, value}, ferry), do: act({:right, value}, ferry)
-
-  def act({:forward, value}, %{orientation: orientation} = ferry) do
-    act({orientation, value}, ferry)
   end
 
   def new_orientation(ferry_orientation, value) do
@@ -49,10 +42,6 @@ defmodule Day12 do
     |> File.stream!()
     |> Stream.map(&String.trim_trailing/1)
     |> Stream.map(&parse/1)
-  end
-
-  def manhattan_distance({target_x, target_y}, {origin_x, origin_y}) do
-    abs(target_x - origin_x) + abs(target_y - origin_y)
   end
 
   def parse("N" <> value), do: {:north, String.to_integer(value)}
