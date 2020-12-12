@@ -60,21 +60,39 @@ defmodule Day11 do
     end)
   end
 
-
   def mutate_seat(:empty, seats, _limit) do
     if none_occupied?(seats) do :occupied else :empty end
   end
 
   def mutate_seat(:occupied, seats, limit) do
-    if number_or_more_occupied(seats, limit) do :empty else :occupied end
+    if occupied_limit_or_above?(seats, limit) do :empty else :occupied end
   end
 
-  def number_or_more_occupied(seats, number) do
+  def occupied_limit_or_above?(seats, number) do
     Enum.count(seats, fn seat -> seat == :occupied end) >= number
   end
 
   def none_occupied?(seats) do
     Enum.all?(seats, fn seat -> seat != :occupied end)
+  end
+
+  def visible_seats(coord, grid) do
+    Enum.reduce(@directions, [], fn direction, acc ->
+      square = look(direction, coord, grid)
+
+      if square do [square | acc] else acc end
+    end)
+  end
+
+  def look({direction_x, direction_y} = direction, {origin_x, origin_y}, squares) do
+    coord = {origin_x + direction_x, origin_y + direction_y}
+    square = Map.get(squares, coord)
+
+    if square == :floor do
+      look(direction, coord, squares)
+    else
+      square
+    end
   end
 
   def adjacent_seats(coord, grid) do
@@ -95,10 +113,6 @@ defmodule Day11 do
     ]
   end
 
-  def parse_square("L"), do: :empty
-  def parse_square("#"), do: :occupied # not needed for the normal input, but helpful for debugging
-  def parse_square("."), do: :floor
-
   def load(file_name) do
     file_name
     |> File.stream!()
@@ -113,17 +127,7 @@ defmodule Day11 do
         into: Map.new()
   end
 
-
-
-
+  def parse_square("L"), do: :empty
+  def parse_square("#"), do: :occupied # not needed for the normal input, but helpful for debugging
+  def parse_square("."), do: :floor
 end
-
-# north ->      substracting 1 to y  until nil in seats
-# south ->      adding 1 to y,       until nil in seats
-# east  ->      adding 1 to x        until nil in seats
-# west  ->      substracting 1 to x  until nil in seats
-
-# north_east -> substracting 1 to y, adding 1 to x       until nil in seats
-# south_east -> adding 1 to y,       adding 1 to x       until nil in seats
-# south_west -> adding 1 to y,       substracting 1 to x until nil in seats
-# north_west -> substracting 1 to y, substracting 1 to x until nil in seats
