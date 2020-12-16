@@ -105,6 +105,7 @@ defmodule Day16 do
     %{rules: rules, my_ticket: my_ticket, nearby_tickets: nearby_tickets}
   end
 
+  # Ain't nobody got time for regexes
   def rules(input) do
     input
     |> String.split("\n", trim: true)
